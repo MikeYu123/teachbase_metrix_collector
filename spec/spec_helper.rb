@@ -1,5 +1,13 @@
 require "bundler/setup"
 require "teachbase_metrix_collector"
+require 'active_record'
+require 'rspec/mocks'
+
+ActiveRecord::Base.establish_connection adapter: "sqlite3", database: ":memory:"
+
+load File.dirname(__FILE__) + '/schema.rb'
+
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

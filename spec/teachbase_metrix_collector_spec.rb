@@ -1,9 +1,7 @@
-RSpec.describe TeachbaseMetrixCollector do
-  it "has a version number" do
-    expect(TeachbaseMetrixCollector::VERSION).not_to be nil
-  end
+require 'teachbase_metrix_collector'
 
-  it "does something useful" do
-    expect(false).to eq(true)
+RSpec.describe Teachbase::MetrixCollector do
+  it "has a version number" do
+    expect(Teachbase::MetrixCollector::VERSION).not_to be nil
   end
 end

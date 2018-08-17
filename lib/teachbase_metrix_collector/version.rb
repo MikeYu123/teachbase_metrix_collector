@@ -1,3 +1,5 @@
-module TeachbaseMetrixCollector
-  VERSION = "0.1.0"
+module Teachbase
+  module MetrixCollector
+    VERSION = "0.1.2"
+  end
 end
