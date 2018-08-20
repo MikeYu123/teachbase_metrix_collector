@@ -1,35 +1,41 @@
-# TeachbaseMetrixCollector
+# Teachbase Metrix Collector
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/teachbase_metrix_collector`. To experiment with that code, run `bin/console` for an interactive prompt.
+Библиотека для поддержки обновления собираемых метрик иерархичной вложенности
 
-TODO: Delete this and the text above, and describe your gem
+## Установка
 
-## Installation
-
-Add this line to your application's Gemfile:
+Для установки библиотеки в проект, добавьте следующую строку в Gemfile:
 
 ```ruby
-gem 'teachbase_metrix_collector'
+gem 'teachbase_metrix_collector', github: 'MikeYu123/teachbase_metrix_collector'
 ```
 
-And then execute:
+И запустите команду `bundle install` (необходим установленный gem __bundler__)
 
-    $ bundle
+## Зависимости
+Данный gem опирается на ruby 2.4.0 & rails 5.1.1, в частности, следующие составляющие:
+* ActiveSupport (используются расширения для классов стандартной библиотеки Ruby)
+* ActiveRecord (ключевая функциональность библиотеки является расширением для моделей ActiveRecord)
+* ActiveJob (для обновления моделей в фоне)
+## Использование
+Для использования библиотеки в rails-приложении необходимо включить модуль `Teachbase::MetrixCollector::BelongsToStat` в класс модели, изменения в которой должны повлечь изменения в родительской модели. Затем необходимо воспользоваться нотацией `belongs_to_stat`. Пример:
+```ruby
+class ParentStat < ActiveRecord::Base; end
 
-Or install it yourself as:
+class ChildStat < ActiveRecord::Base
+  include Teachbase::MetrixCollector::BelongsToStat
 
-    $ gem install teachbase_metrix_collector
-
-## Usage
-
-TODO: Write usage instructions here
-
-## Development
-
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/teachbase_metrix_collector.
+  belongs_to_stat :parent_stat, columns: %i[score]
+end
+```
+Синтаксис belongs_to_stat выглядит следующим образом: первым аргументом выступает имя родительской модели, затем по ключевому слову предоставляется список колонок, которые будут обновляться в родительской модели(в виде массива литералов типа `Symbol`). При этом данные колонки должны присутствовать в обеих моделях, и обе модели должны поддерживать оптимистический захват строк таблиц (optimistic locking).
+## Тестирование
+Функциональность протестирована с использованием Rspec и Rails-хелперов для тестирования. Для тестирования скопируйте репозиторий и запустите:
+`bin/setup && bundle exec rspec` (необходим установленный ruby и gem bundler).
+## Реализация
+В основе реализации лежит механизм обратного вызова моделями ActiveRecord процедур при сохранении моделей.
+При сохранении модели, имеющей предка, для которого отслеживаются изменения колонок, создается фоновая задача на обновление модели этого предка. Обновление происходит с использованием оптимистического захвата и посредством добавления разности между изменяемыми снимками состояния по полям, таким образом в случае, если в рамках фоновой задачи не удастся применить изменения, будет создана новая задача для обновления данной модели с той же разностью, что позволяет поддерживать консистентность без использования реальных блокировок в таблицах.
+## TODO
+* Поддержка операций удаления моделей (при помощи обратных вызовов на удаление)
+* Поддержка отслеживания изменений в моделях с различными именами колонок в родительской и вложенной моделях
+* Добавить проверку на существование моноида для типов отслеживаемых типов полей
